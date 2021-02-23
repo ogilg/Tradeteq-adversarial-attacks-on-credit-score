@@ -28,6 +28,10 @@ class ModelEvaluator(ABC):
     def predict_proba(self, X):
         pass
 
+    """
+    Evaluates model accuracy and AUC on test set
+    returns AUC test score
+    """
     def evaluate(self, X_test, y_test):
         print(f"Accuracy - Test: {accuracy_score(y_test, self.model.predict(X_test))}")
         test_auc = roc_auc_score(y_test, self.model.predict_proba(X_test)[:, 1])

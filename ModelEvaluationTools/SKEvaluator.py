@@ -28,6 +28,7 @@ class SKEvaluator(ModelEvaluator):
 
     """
     Saves model with AUC score in the name of the file
+    Example file name: rf_0.85 for a random forest model with 0.85 AUC
     """
     def save_model(self):
         assert self.fitted

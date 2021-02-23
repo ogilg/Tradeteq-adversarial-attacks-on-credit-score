@@ -1,0 +1,27 @@
+$ python postcodemap.py AUG_2019
+
+12:11 [INFO] -------------------------------------------------------------------------------------
+12:11 [INFO]                                 S T A R T                   28/02/2020 12:11:38
+12:11 [INFO] -------------------------------------------------------------------------------------
+12:11 [INFO] Command Line:                  [ postcodemap.py  AUG_2019 ]
+12:11 [INFO] Config file:                   config\postcodemap.cfg
+12:11 [INFO] Config used:                   AUG_2019
+12:11 [INFO] Log file:                      log\postcodemap.log
+12:11 [INFO] File logging level:            INFO
+12:11 [INFO] Console logging level:         INFO
+12:11 [INFO] Data input folder:             data/
+12:11 [INFO] Data output folder:            data/
+12:11 [INFO] nspl_file_in:                  NSPL_AUG_2019_UK.csv
+12:11 [INFO] nspl_file_out:                 NSPL_AUG_2019_UK.pkl
+12:11 [INFO] save_to_file:                  1
+12:11 [INFO] nspl_bcp_file:
+12:11 [INFO] -------------------------------------------------------------------------------------
+Loading postcode data from "data/NSPL_AUG_2019_UK.csv" ...
+12:11 [WARNING] sys:1: DtypeWarning: Columns (31) have mixed types. Specify dtype option on import or set low_memory=False.
+
+  0%|          | 0/2622934 [00:00<?, ?it/s]12:11 [WARNING] postcodemap.py:137: FutureWarning: set_value is deprecated and will be removed in a future release. Please use .at[] or .iat[] accessors instead
+  nspl.set_value(i, "imdu",  regr[ctyidx,0] + regr[ctyidx,1] * nspl.loc[i, "imd"])
+
+100%|##########| 2622934/2622934 [02:18<00:00, 18958.71it/s]
+12:14 [INFO]
+Saving data to pickle file "data/NSPL_AUG_2019_UK.pkl" ...
