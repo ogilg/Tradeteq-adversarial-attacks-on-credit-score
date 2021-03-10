@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /catboost_info/
+/Co_600K_Jul2019_6M.pkl
