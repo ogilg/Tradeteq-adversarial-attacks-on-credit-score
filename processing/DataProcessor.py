@@ -1,5 +1,5 @@
 import pandas as pd
-import numbers
+from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
@@ -15,18 +15,8 @@ class DataProcessor:
     def remove_columns(self, cols):
         self.df = self.df.drop(cols, axis=1)
 
-    def _is_numeric(self, col_name):
-        i = 0
-        column = self.df[col_name].values
-        while i < len(column) and column[i] is None:
-            i += 1
-        if i == len(column):
-            return "Cannot infer column type"
-        return isinstance(column[i], numbers.Number)
-
-
     def _extract_categorical_feature_names(self):
-        return [col_name for col_name in self.df.columns if not self._is_numeric(col_name)]
+        return [col_name for col_name in self.df.columns if not is_numeric_dtype(col_name)]
 
     def _convert_col_to(self, col_name, type_constructor):
         return list(map(lambda x: type_constructor(x) if x is not None else None, self.df[col_name].values))
