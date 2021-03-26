@@ -33,4 +33,4 @@ class SKEvaluator(ModelEvaluator):
     def save_model(self):
         assert self.fitted
         filename = os.path.join("fitted_models", self.model_name+'_'+str(round(self.most_recent_auc, 3)))
-        pickle.dump(self.model, open(filename, 'wb'))
+        pickle.dump(self.model, open(filename+'.pkl', 'wb'))
