@@ -26,7 +26,7 @@ class subModel:
         _, X_sample, _, y_sample = train_test_split(X, y, test_size=0.01, random_state=0, stratify=y,shuffle=True)
 
         self.NN_Model = self.Create_NN_Model(input_dim=X_trainraw.shape[1])
-        self.train(X_sample, y_sample, 1, 2)
+        self.train(X_sample, y_sample, 0.5, 2)
 
     def train(self, X, y, alpha, reps):  # alpha is step-size, reps is number of augmentations
         X = X.astype(np.float32)
@@ -92,19 +92,18 @@ class subModel:
 
 if __name__ == '__main__':
     # dummy target model to test against
+    xg = pickle.load(open(os.path.join("fitted_models", "rf_0.929.pkl"), "rb"))
     trainingData = pickle.load(open(os.path.join("Processing", "train_preproc.p"), "rb"))
     testData = pickle.load(open(os.path.join("Processing", "test_preproc.p"), "rb"))
     X_trainraw, y_trainraw = trainingData[0].to_numpy(), trainingData[1]
     X_testraw, y_testraw = testData[0].to_numpy(), testData[1]
     X = np.vstack((X_trainraw, X_testraw))
     y = np.hstack((y_trainraw, y_testraw))
-    # lr = LogisticRegression(max_iter=10000)
-    # lr.fit(X, y)
-    xg = pickle.load(open(os.path.join("fitted_models", "xg_0.905.pkl"), "rb"))
 
+    
     print("target model ready")
 
     subModel = subModel(xg)
     print("sub model trained")
     subModel.test_accuracy(X, y)
-    # AUC test = 0.75
+    # AUC test = 0.816
