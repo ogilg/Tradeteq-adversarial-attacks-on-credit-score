@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import pickle
 
-class simBA:
+class onepixel:
     def _init_(self, targetModel):
         self.lrModel=LogisticRegression()
         self.targetModel = targetModel
