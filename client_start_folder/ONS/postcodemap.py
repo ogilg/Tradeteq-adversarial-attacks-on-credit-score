@@ -26,7 +26,7 @@ from subprocess import check_output, call
 import os
 
 # Include Machine Learning utils
-from myutils import *
+from client_start_folder.ONS.myutils import *
 
 #0. setup configuration and logging
 _modulename = "postcodemap"
