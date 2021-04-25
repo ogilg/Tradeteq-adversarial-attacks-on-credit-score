@@ -12,10 +12,10 @@ from numpy.random import choice
 
 
 class onePixel:
-    def __init__(self, targetModel):
+    def __init__(self, targetModel, weight):
 
         self.targetModel = targetModel
-
+        self.weight = weight
         trainingData = pickle.load(open(os.path.join("Processing", "train_preproc.p"), "rb"))
         testData = pickle.load(open(os.path.join("Processing", "test_preproc.p"), "rb"))
         self.columns = trainingData[0].columns
@@ -28,13 +28,14 @@ class onePixel:
 
 
     def perturb(self, X):
-        col = choice(len(X), 1)
-        feature = X[col]
-        if type(feature) == str:
-            feature = feature[::-1]
-        else:
-            feature = feature * (-1)
-        X[col] = feature
+        for i in range(0,len(X)):
+            f = choice(len(X[0]), 1, p=weight[i])
+            feature = X[i][f]
+            if type(feature) == str:
+                feature = feature[::-1]
+            else:
+                feature = feature * (-1)
+            X[i][f] = feature
         return self.targetModel.predict(X)
 
 
@@ -57,8 +58,6 @@ if __name__ == '__main__':
 
 
         rf = pickle.load(open(os.path.join("fitted_models","rf_0.929"),"rb"))
-        onePixel = onePixel(rf)
+        weight=pickle.load(open("shap.txt","rb"))
+        onePixel = onePixel(rf, weight)
         onePixel.test_accuracy(X,y)
-    
-    #  Accuracy - Test: 0.9980133333333333
-    # AUC - Test: 0.9376627596348743
