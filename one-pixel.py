@@ -26,16 +26,17 @@ class onePixel:
         _, X_sample, _, y_sample = train_test_split(X, y, test_size=0.01, random_state=0, stratify=y)
 
 
-
     def perturb(self, X):
+
         for i in range(0,len(X)):
-            f = choice(len(X[0]), 1, p=weight[i])
-            feature = X[i][f]
-            if type(feature) == str:
-                feature = feature[::-1]
-            else:
-                feature = feature * (-1)
-            X[i][f] = feature
+            list = choice(len(X[0]), 10, replace=False, p=weight[i])
+            for f in list:
+                feature = X[i][f]
+                if type(feature) == str:
+                    feature = feature[::-1]
+                else:
+                    feature = feature * (-1)
+                X[i][f] = feature
         return self.targetModel.predict(X)
 
 
@@ -58,6 +59,9 @@ if __name__ == '__main__':
 
 
         rf = pickle.load(open(os.path.join("fitted_models","rf_0.929"),"rb"))
-        weight=pickle.load(open("shap.txt","rb"))
+
+        weight = pickle.load(open("weight.txt","rb"))
         onePixel = onePixel(rf, weight)
         onePixel.test_accuracy(X,y)
+
+    # AUC - Test: 0.6274632001126705
