@@ -82,7 +82,7 @@ class DataProcessor:
             for i in df["pcd"]:
                 pcdDict[i] = pcdDict.get(i, 0) + 1
             df["OtherCompInPcd"] = df.apply(lambda row: pcdDict[row["pcd"]], axis = 1)
-            df = df.drop(['pcd'], axis=1)
+            #df = df.drop(['pcd'], axis=1)
         return df
 
     def _is_exponential_feature(self, feature_col):
@@ -126,7 +126,7 @@ class DataProcessor:
     def clean_data(self, df):
         df = self.add_time_gap_features(df, dates_to_convert)
         df = self.add_others_in_pcd_feature(df)
-        assert 'pcd' not in df.columns
+        assert 'pcd' in df.columns
 
         return df
 
@@ -149,7 +149,7 @@ class DataProcessor:
         df = self.clean_data(self.df)
         X_train, X_test, y_train, y_test = self.get_train_test(df)
         self._extract_feature_types(X_train)
-        assert 'pcd' not in self.cat_features
+        assert 'pcd' in self.cat_features
         # Create and fit the transformers for each column and store them in col_operations.pkl
         self.col_operations = self.create_column_operations(X_train, scale)
         joblib.dump(self.col_operations, 'column_operations.pkl')

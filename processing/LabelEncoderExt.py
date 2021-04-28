@@ -34,3 +34,6 @@ class LabelEncoderExt(object):
                 new_data_list = ['Unknown' if x==unique_item else x for x in new_data_list]
 
         return self.label_encoder.transform(new_data_list)
+
+    def inverse_transform(self, X):
+        return self.label_encoder.inverse_transform(X)
