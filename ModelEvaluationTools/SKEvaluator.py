@@ -21,7 +21,7 @@ class SKEvaluator(ModelEvaluator):
 
     def predict_proba(self, X):
         try:
-            return self.model.predict_proba(X)
+            return self.model.predict_proba(X)[:,1]
         except AttributeError as e:
             print(e)
             print("Type of model is: ", self.type)
@@ -32,5 +32,6 @@ class SKEvaluator(ModelEvaluator):
     """
     def save_model(self):
         assert self.fitted
-        filename = os.path.join("fitted_models", self.model_name+'_'+str(round(self.most_recent_auc, 3)))
+        main_dir = os.path.dirname(os.path.dirname(__file__))
+        filename = os.path.join(main_dir, "fitted_models", self.model_name+'_'+str(round(self.most_recent_auc, 3)))
         pickle.dump(self.model, open(filename, 'wb'))

@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import pickle
 import joblib
+from processing.PostcodeEncoder import format_pcd
+
 
 """
 these are the fields we will derive from the postcode
@@ -10,35 +12,41 @@ these are the fields we will derive from the postcode
 "country", "oac1", "oac2", "imdu", "OtherCompInPcd"]
 """
 
-ons_data_folder = os.path.join("..", "client_start_folder", "ONS", "data")
+
+if __name__=="main":
+    data_dir = os.cwd()
+else:
+    data_dir = os.path.dirname(__file__)
+
+ons_data_folder = os.path.join(os.path.dirname(data_dir), "client_start_folder", "ONS", "data")
 NSPL_file = "NSPL_AUG_2019_UK.csv"
 ons_data = pd.read_csv(os.path.join(ons_data_folder, NSPL_file),
                        usecols=["pcd", "oseast1m", "osnrth1m", "cty", "oa11",
                                 "lat", "long", "ru11ind", "oac11",
                                 "imd"])
 
-with open("feature_types.p", "rb") as file:
+with open(os.path.join(data_dir, "feature_types.p"), "rb") as file:
     cat, num, bool = pickle.load(file)
 
 # Import data that has already been preprocessed
-data_dir = os.getcwd()
-with open(os.path.join(data_dir, r"train_preproc.p"), 'rb') as data_file:
+with open(os.path.join(data_dir, r"train_data.p"), 'rb') as data_file:
     train_data = pickle.load(data_file)
 X_train, y_train = train_data[0], train_data[1]
 
-with open(os.path.join(data_dir, r"test_preproc.p"), 'rb') as data_file:
+with open(os.path.join(data_dir, r"test_data.p"), 'rb') as data_file:
     test_data = pickle.load(data_file)
 X_test, y_test = test_data[0], test_data[1]
 
-col_ops = joblib.load('column_operations.pkl')
-
-
+col_ops = joblib.load(os.path.join(data_dir, "column_operations.pkl"))
 
 class ModelWrapper:
+
     def __init__(self, model):
         self.model = model
         # store order of features
-        self.columns = model.get_booster().feature_names
+        # maybe not the right way to do this - better to get this from the model somehow?
+        self.columns = X_train.columns.tolist()
+        #self.columns.remove('pcd')
 
     def predict(self, X):
         return self.model.predict(self._complete_data(X)[self.columns])
@@ -50,7 +58,6 @@ class ModelWrapper:
     def _complete_data(self, X):
         # round booleans to 0 or 1
         X = round_booleans(X).reset_index(drop=True)
-
         if len(X.columns) != len(self.columns) or X.columns != self.columns:
             try:
                 derived_df = self._construct_derived_df(X["pcd"])
@@ -60,16 +67,15 @@ class ModelWrapper:
                 raise error
         if "pcd" in X.columns:
             X = X.drop(["pcd"], axis=1)
-            print(derived_df)
         return X
 
     def _construct_derived_df(self, X_pcd):
-        # decode the pcd field using the inverse of the label encoder
-        decoded_pcd = col_ops["pcd"].label_encoder.inverse_transform(X_pcd.astype(int))
+        # postcode no longer needs decoding - done already
+        # decoded_pcd = col_ops["pcd"].label_encoder.inverse_transform(X_pcd.astype(int))
         # create df with derived fileds from ons data
         derived_df = []
-        for pcd in decoded_pcd:
-            pcd = add_space_to_pcd(pcd)
+        for pcd in X_pcd:
+            #pcd = add_space_to_pcd(pcd)
             derived_df.append(self._pcd_to_derived(pcd))
         derived_df = pd.concat(derived_df)
         # equalise imd into universal imd ("imdu") across different countries
@@ -81,10 +87,18 @@ class ModelWrapper:
 
     def _pcd_to_derived(self, pcd):
         derived = ons_data.loc[ons_data["pcd"] == pcd]
+        print(derived)
         derived["country"] = derived.cty.map(cty_map)
-        derived["oac1"] = int(derived.oac11.map(lambda x: x[0]))
-        derived["oac2"] = derived.oac11.map(lambda x: x[0:2])
-        derived["OtherCompInPcd"] = pcdDict[pcd]
+        derived["cty"] = derived.cty.map(lambda x: "Nan" if pd.isnull(x) else x)
+        derived["oac11"] = derived.oac11.map(lambda x: "Nan" if pd.isnull(x) else x)
+        derived["oac1"] = derived.oac11.map(lambda x: "Nan" if (x == "Nan") else x[0])
+        derived["oac2"] = derived.oac11.map(lambda x: "Nan" if (x == "Nan") else x[0:2])
+        derived["ru11ind"] = derived.ru11ind.map(lambda x: "Nan" if pd.isnull(x) else x)
+        try:
+            derived["OtherCompInPcd"] = pcdDict[pcd]
+        except KeyError:
+            derived["OtherCompInPcd"] = 0
+        print(derived)
         return derived
 
     # output argument
@@ -98,6 +112,7 @@ class ModelWrapper:
         return derived
 
     def _encode_derived(self, derived):
+        derived =derived.drop(["pcd"], axis=1)
         for col in derived.columns:
             if col_ops[col] is not None:
                 derived[col] = col_ops[col].transform(derived[col])
@@ -110,10 +125,9 @@ def round_booleans(X):
     return X
 
 def count_companies_with_same_pcd(full_data):
-    decoded_pcd = col_ops["pcd"].label_encoder.inverse_transform(full_data["pcd"].astype(int))
     pcdDict = dict()
-    for pcd in decoded_pcd:
-        actual_pcd = add_space_to_pcd(pcd)
+    for pcd in full_data['pcd']:
+        actual_pcd = format_pcd(pcd)
         pcdDict[actual_pcd] = pcdDict.get(actual_pcd, 0) + 1
     return pcdDict
 
@@ -144,8 +158,6 @@ for idx, country in enumerate(rO):
     B = (rB[idx] - rO[idx]) / (rI[idx] - rO[idx])
     regr[idx] = [A[1], (B[1] - A[1]) / (B[0] - A[0])]
 
-pcdDict = count_companies_with_same_pcd(X_train)
 
-
-
-
+with open(os.path.join(data_dir, "pcd_dict.p"), "rb") as file:
+    pcdDict = pickle.load(file)

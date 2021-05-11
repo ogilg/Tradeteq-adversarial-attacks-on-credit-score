@@ -33,8 +33,8 @@ class ModelEvaluator(ABC):
     returns AUC test score
     """
     def evaluate(self, X_test, y_test):
-        print(f"Accuracy - Test: {accuracy_score(y_test, self.model.predict(X_test))}")
-        test_auc = roc_auc_score(y_test, self.model.predict_proba(X_test)[:, 1])
+        print(f"Accuracy - Test: {accuracy_score(y_test, self.predict(X_test))}")
+        test_auc = roc_auc_score(y_test, self.predict_proba(X_test))
         print(f"AUC - Test: {test_auc}")
         self.most_recent_auc = test_auc
         return test_auc
