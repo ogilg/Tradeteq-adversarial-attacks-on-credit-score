@@ -4,11 +4,10 @@ import joblib
 
 class PostcodeEncoder():
     data_dir = os.path.dirname(__file__)
-    print(data_dir)
  
     ons_data_folder = os.path.join(os.path.dirname(data_dir), "client_start_folder",
                                        "ONS", "data")
-    print(ons_data_folder)
+
     NSPL_file = "NSPL_AUG_2019_UK.csv"
     ons_data = pd.read_csv(os.path.join(ons_data_folder, NSPL_file),
                                usecols=["pcd"])

@@ -82,7 +82,10 @@ class DataProcessor:
             for i in df["pcd"]:
                 pcdDict[i] = pcdDict.get(i, 0) + 1
             df["OtherCompInPcd"] = df.apply(lambda row: pcdDict[row["pcd"]], axis = 1)
-            #df = df.drop(['pcd'], axis=1)
+            df = df.drop(['pcd'], axis=1)
+            # store pcd dictionary for use in model wrapper
+            with open(os.path.join(os.path.dirname(__file__), "pcd_dict.p"), "wb") as file:
+                pickle.dump(pcdDict, file)
         return df
 
     def _is_exponential_feature(self, feature_col):

@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+# prevents warnings from not using .loc
+pd.options.mode.chained_assignment = None
 import numpy as np
 import pickle
 import joblib
@@ -75,7 +77,6 @@ class ModelWrapper:
         # create df with derived fileds from ons data
         derived_df = []
         for pcd in X_pcd:
-            #pcd = add_space_to_pcd(pcd)
             derived_df.append(self._pcd_to_derived(pcd))
         derived_df = pd.concat(derived_df)
         # equalise imd into universal imd ("imdu") across different countries
@@ -94,6 +95,15 @@ class ModelWrapper:
         derived["oac1"] = derived.oac11.map(lambda x: "Nan" if (x == "Nan") else x[0])
         derived["oac2"] = derived.oac11.map(lambda x: "Nan" if (x == "Nan") else x[0:2])
         derived["ru11ind"] = derived.ru11ind.map(lambda x: "Nan" if pd.isnull(x) else x)
+        # fix for oseast1m, osnrth1m sometimes being NaN
+        # if we put the example through preprocessing, the pipeline would take care of this
+        # numbers are the mean of each from the testing data
+        oseastmean = 456447.45768833335
+        osnrthmean = 271566.95671666664
+        derived['oseast1m'] = derived.oseast1m.map(lambda x: oseastmean if np.isnan(x) 
+                                                     else x)
+        derived['osnrth1m'] = derived.osnrth1m.map(lambda x: osnrthmean if np.isnan(x) 
+                                                     else x)
         try:
             derived["OtherCompInPcd"] = pcdDict[pcd]
         except KeyError:
@@ -124,6 +134,7 @@ def round_booleans(X):
             X[bool_feature] = X[bool_feature].apply(round)
     return X
 
+# No longer using this - we load in a dict created when preprocessing
 def count_companies_with_same_pcd(full_data):
     pcdDict = dict()
     for pcd in full_data['pcd']:
@@ -139,9 +150,6 @@ def cty_map(cty):
     else:
         country = 'E'
     return country
-
-def add_space_to_pcd(pcd):
-    return pcd[:3] + " " + pcd[3:]
 
 
 # imd is not comparable across England, Wales, Scotland and NI

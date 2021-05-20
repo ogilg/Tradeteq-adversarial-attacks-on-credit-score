@@ -11,6 +11,8 @@ from sklearn.model_selection import train_test_split
 from processing.ModelWrapper import ModelWrapper
 from processing.PostcodeEncoder import PostcodeEncoder
 
+encoder = PostcodeEncoder()
+
 # load training data
 # used to find initial points to use, and to get column names
 # also used to calculate standard deviation - switch this to a subset of data
@@ -57,7 +59,7 @@ cat_features_index = [incomplete_columns.get_loc(col_name) for col_name in cat_f
 min_max_cat = pd.DataFrame(index=["min", "max"], columns=cat_features)
 for col_name in cat_features:
     if col_name == 'pcd':
-        min_max_cat[col_name]["max"] = PostcodeEncoder().num_postcodes()
+        min_max_cat[col_name]["max"] = encoder.num_postcodes()
         min_max_cat[col_name]["min"] = 0
     else:
         min_max_cat[col_name]["max"] = X_sample[col_name].max(axis=0)
@@ -115,13 +117,39 @@ class BaysOpt():
                 d[index] = 0
         return (d @ self.weighting_vector)
 
+    # objective function incorporating both failed_prob and delta - smoother function
+    def objective(self, X, true_company):
+       encoder = PostcodeEncoder()
+       X_df = self.build_df(X)
+       X_df['pcd'].iloc[0] = encoder.search_decode(X_df['pcd'].iloc[0])
+       delta = self.distance_function(X, true_company)
+       failed_prob = self.wrapper.predict_proba(X_df)[0,1]
+       if failed_prob < 0.5:
+           # model has been tricked
+           obj = 10*failed_prob + delta
+       else:
+           # model has not been tricked
+           obj = 100 * failed_prob + delta
+       return obj
+
+    def build_df(self, X):
+        if(len(X) == len(X_sample.columns)):
+           return pd.DataFrame(data=[X], columns=X_sample.columns)
+        elif(len(X) == len(incomplete_columns)):
+           return pd.DataFrame(data=[X], columns=incomplete_columns)
+        else:
+           raise ValueError("Objective function recieved an unexpected number of columns")
+
+    def get_arr(X):
+        return X.values[0]
+
     # idea: make objective optional? allows for experiments, just run the best one when
     # I find it
-    def attack(self, starting_sample, objective):
+    def attack(self, starting_sample):
         x0 = list(starting_sample)
 
         def compute_objective(X):
-            return objective(X, starting_sample, self.wrapper, self.distance_function)
+            return self.objective(X, starting_sample)
 
         search_space = self.construct_derived_search_space(starting_sample)
         print("starting attack now")
